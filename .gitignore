@@ -1,0 +1,31 @@
+# --- Fichiers volumineux (limite GitHub 100 MB) ---
+*.safetensors
+*.h5
+*.ckpt
+*.onnx
+*.pt
+*.pth
+*.mp4
+*.mov
+*.avi
+*video secours*
+
+# --- Python / Jupyter ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# --- OS / Editeurs ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# --- Secrets ---
+.env
+*.env

@@ -1,0 +1,11 @@
+flask
+numpy
+tensorflow
+scikit-learn
+transformers
+torch
+pypdf
+PyPDF2
+h5py
+requests
+safetensors

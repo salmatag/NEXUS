@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexus</title>
+  <link rel="icon" type="image/png" href="/static/img/nexus_jellyfish_favicon.png?v=8">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <main class="main-shell">
+      <div class="chat-head">
+        <div class="feature-banner" onclick="openDrawer('generation')" role="button" tabindex="0" title="Ouvrir les paramètres et l'analyse">
+          <div class="feature-title">
+            <span class="feature-mini-logo">
+              <img src="/static/img/nexus_jellyfish_favicon.png?v=8" alt="">
+            </span>
+            <span>Nexus</span>
+          </div>
+          <div class="banner-spacer"></div>
+          <button id="theme-toggle" class="theme-toggle" onclick="event.stopPropagation(); toggleTheme()" title="Changer de mode">☀️</button>
+          <button class="ghost banner-menu" onclick="event.stopPropagation(); openDrawer('generation')" title="Paramètres et métriques">☰</button>
+        </div>
+      </div>
+      <div id="loading" class="loading"></div>
+
+      <section class="response-area" id="response-area">
+        <div id="chat-log" class="chat-log"></div>
+        <div id="empty-state" class="empty-state">
+          <div>
+            <div class="empty-icon" aria-hidden="true">
+              <img src="/static/img/nexus_jellyfish_logo.png?v=8" alt="">
+            </div>
+            <h2>Comment puis-je vous aider ?</h2>
+            <p></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="composer">
+        <div id="composer-box" class="composer-box">
+          <label class="file-btn" for="file-input" title="Ajouter un fichier">＋</label>
+          <input id="file-input" type="file" multiple>
+          <textarea id="user-prompt" placeholder="Message Nexus..."></textarea>
+          <div class="composer-status"><span id="status-dot" class="dot"></span><span id="model-status">NexusLM</span></div>
+          <button id="generate-btn" class="primary" onclick="prepareGeneration()">Générer</button>
+        </div>
+        <div class="composer-footer">
+          <div class="file-line">
+            <span id="file-label" class="file-chip">Aucun fichier sélectionné</span>
+            <button id="remove-file-btn" class="remove-file-btn" type="button" onclick="clearAttachments()" style="display:none">Supprimer la pièce jointe</button>
+          </div>
+          <div class="toggles">
+            <label class="toggle-chip">
+              <input id="use-rag" type="checkbox" checked>
+              <span>RAG</span>
+            </label>
+            <label class="toggle-chip">
+              <input id="use-ner" type="checkbox" checked>
+              <span>NER</span>
+            </label>
+            <label class="toggle-chip">
+              <input id="use-ollama" type="checkbox" checked>
+              <span>Ollama</span>
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside id="drawer" class="drawer">
+    <div class="drawer-head">
+      <h2>Paramètres & analyse</h2>
+      <button class="secondary" onclick="closeDrawer()" title="Rétracter le panneau">Rétracter</button>
+    </div>
+
+    <div class="tabs">
+      <button id="tab-generation-btn" class="tab active" onclick="showTab('generation')">Génération</button>
+      <button id="tab-rag-btn" class="tab" onclick="showTab('rag')">RAG</button>
+      <button id="tab-ner-btn" class="tab" onclick="showTab('ner')">NER</button>
+    </div>
+
+    <div id="tab-generation" class="tab-content active">
+      <div class="panel-card">
+        <h3>Actions token par token</h3>
+        <div class="drawer-actions">
+          <button id="next-btn" class="secondary" onclick="showNextToken()" disabled>Token suivant</button>
+          <button id="auto-btn" class="secondary" onclick="toggleAuto()" disabled>Lecture auto</button>
+        </div>
+      </div>
+      <div class="panel-card">
+        <h3>Token courant</h3>
+        <div id="current-token" class="current-token">Aucun token</div>
+      </div>
+      <div class="panel-card">
+        <h3>Alternatives possibles</h3>
+        <div id="alternatives" class="list"><p class="notice">Les top tokens apparaîtront ici après génération.</p></div>
+      </div>
+      <div class="panel-card">
+        <h3>Réglages</h3>
+        <div class="control">
+          <label>Température <strong id="temperature-value">0.4</strong></label>
+          <input id="temperature" type="range" min="0.1" max="1.5" step="0.1" value="0.4" oninput="syncControls()">
+        </div>
+        <div class="control">
+          <label>Top-k <strong id="topk-value">3</strong></label>
+          <input id="top-k" type="range" min="1" max="20" step="1" value="3" oninput="syncControls()">
+        </div>
+        <div class="control">
+          <label>Tokens à générer</label>
+          <input id="max-tokens" type="number" min="1" max="120" value="25">
+        </div>
+      </div>
+      <div class="panel-card">
+        <h3>Mesures de génération</h3>
+        <div class="metric"><span>Tokens prompt initial</span><span id="m-prompt">0</span></div>
+        <div class="metric"><span>Tokens générés</span><span id="m-generated">0</span></div>
+        <div class="metric"><span>Tokens restants</span><span id="m-remaining">0</span></div>
+        <div class="metric"><span>Taille contexte courant</span><span id="m-context">0</span></div>
+        <div class="metric"><span>Progression</span><span id="m-progress">0 %</span></div>
+        <div class="metric"><span>Temps total NexusLM</span><span id="m-time">0 s</span></div>
+        <div class="metric"><span>Vitesse moyenne</span><span id="m-speed">0 tok/s</span></div>
+        <div class="progress-wrap"><div id="progress-bar" class="progress-bar"></div></div>
+      </div>
+      <div class="panel-card">
+        <h3>Info modèle</h3>
+        <p class="notice" id="model-info">Le modèle NexusLM est chargé localement depuis les fichiers fournis.</p>
+      </div>
+    </div>
+
+    <div id="tab-rag" class="tab-content">
+      <div class="panel-card">
+        <h3>Passages RAG retrouvés</h3>
+        <div id="rag-results" class="list"><p class="notice">Active le RAG et ajoute un fichier pour voir les passages utilisés.</p></div>
+      </div>
+    </div>
+
+    <div id="tab-ner" class="tab-content">
+      <div class="panel-card">
+        <h3>Entités biomédicales détectées</h3>
+        <div id="ner-results" class="list"><p class="notice">Active le NER pour afficher les composés chimiques et les maladies détectés.</p></div>
+      </div>
+      <div class="panel-card">
+        <h3>À savoir</h3>
+        <p class="notice">Le NER utilisé reprend la version finale du notebook : <b>BiomedBERT / PubMedBERT</b> fine-tuné sur <b>BC5CDR</b>. Il détecte principalement les entités <b>Chemical</b> et <b>Disease</b>. Le dossier chargé est <b>models/biomedbert_ner_bc5cdr</b>.</p>
+      </div>
+    </div>
+    </aside>
+  </div>
+
+  <div id="overlay" class="overlay" onclick="closeDrawer()"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
