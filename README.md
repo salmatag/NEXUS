@@ -7,15 +7,23 @@ Projet NEXUS : notebooks d'analyse et interface web locale (`Nexus_site`).
 - `Nexus.ipynb`, `Interface.ipynb`, `Analyse_questionnaire_Nexus.ipynb`, `Nexus_Extensions_NER_RAG.ipynb` : notebooks du projet.
 - `Nexus_site/` : application Flask (interface locale RAG + NER + Ollama).
 
-## Modèles non inclus (fichiers volumineux)
+## Modèles (hébergés sur Hugging Face)
 
-GitHub refuse les fichiers de plus de 100 Mo. Ces fichiers sont donc exclus par `.gitignore` et doivent être récupérés localement :
+Les modèles sont trop volumineux pour GitHub (> 100 Mo), ils sont donc hébergés sur le Hub :
+**https://huggingface.co/salmatag/nexus-models**
 
-- `Nexus_site/models/biomedbert_ner_bc5cdr/model.safetensors` (~415 Mo)
-- `Nexus_site/models/nexus_pubmed_big/model.weights.h5` (~91 Mo)
-- les vidéos `*.mp4`
+Téléchargement automatique au bon emplacement :
 
-Pour versionner ces fichiers, utilisez [Git LFS](https://git-lfs.com/) ou un stockage externe.
+```python
+from huggingface_hub import snapshot_download
+
+snapshot_download(
+    repo_id="salmatag/nexus-models",
+    local_dir="Nexus_site/models",
+)
+```
+
+Contenu : `biomedbert_ner_bc5cdr` (NER biomédical) et `nexus_pubmed_big` (NexusLM).
 
 ## Installation
 
